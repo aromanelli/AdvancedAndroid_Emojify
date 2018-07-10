@@ -25,10 +25,13 @@ import android.widget.Toast;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.Landmark;
+
+import java.util.Locale;
 
 class Emojifier {
 
-    private static final String LOG_TAG = Emojifier.class.getSimpleName();
+    private static final String TAG = Emojifier.class.getSimpleName();
 
     /**
      * Method for detecting faces in a bitmap.
@@ -42,6 +45,7 @@ class Emojifier {
         FaceDetector detector = new FaceDetector.Builder(context)
                 .setTrackingEnabled(false)
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setLandmarkType(FaceDetector.ALL_LANDMARKS)
                 .build();
 
         // Build the frame
@@ -51,18 +55,34 @@ class Emojifier {
         SparseArray<Face> faces = detector.detect(frame);
 
         // Log the number of faces
-        Log.d(LOG_TAG, "detectFaces: number of faces = " + faces.size());
+        Log.d(TAG, "detectFaces: number of faces = " + faces.size());
 
         // If there are no faces detected, show a Toast message
         if(faces.size() == 0){
             Toast.makeText(context, R.string.no_faces_message, Toast.LENGTH_SHORT).show();
+        } else {
+            // TODO (2): Iterate through the faces, calling getClassifications() for each face.
+            for (int i = 0; i < faces.size(); i++) {
+                getClassifications(faces.valueAt(i), context);
+            }
         }
-
-        // TODO (2): Iterate through the faces, calling getClassifications() for each face.
 
         // Release the detector
         detector.release();
     }
 
     // TODO (1): Create a static method called getClassifications() which logs the probability of each eye being open and that the person is smiling.
+    // https://youtu.be/WJuSR0jvIcc
+
+    private static void getClassifications(Face face, Context context) {
+        final String msg = "Face: "
+                + "Left Eye " + String.format(Locale.getDefault(), "%."+ 1 +"f",face.getIsLeftEyeOpenProbability() * 100)+"%"
+                + ", "
+                + "Right Eye " + String.format(Locale.getDefault(), "%."+ 1 +"f",face.getIsRightEyeOpenProbability() * 100)+"%"
+                + ", "
+                + "Smiling " + String.format(Locale.getDefault(), "%."+ 1 +"f",face.getIsSmilingProbability() * 100)+"%";
+        Log.i(TAG, msg);
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+    }
+
 }
